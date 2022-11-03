@@ -1,22 +1,19 @@
 use std::io::*;
 use std::net::*;
 
+use crate::object::Person;
+
 pub fn main() {
     println!("Running as server");
 
+    // Open the listener and get a connection from it
     let listener = TcpListener::bind("127.0.0.1:10104").unwrap();
-    let (mut conn, addr) = listener.accept().unwrap();
+    let (mut conn, _) = listener.accept().unwrap();
 
-    println!("Connection from {}", addr);
-
+    // Set up the reader
     let conn_reader = BufReader::new( &mut conn);
-    let http_req: Vec<_> = conn_reader.lines().map(|result| result.unwrap()).take_while(|line| !line.is_empty()).collect();
 
-    println!("Request: {:#?}", http_req);
-
-    let status_line = "HTTP/1.1 200 OK";
-    let contents = "<!DOCTYPE html><html lang=\"en\"><head><title>A</title><body><h1>A</h1></body></html>";
-    let length = contents.len();
-    let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
-    conn.write_all(response.as_bytes()).unwrap();
+    // Get the JSON directly from the reader
+    let object: Person = serde_json::from_reader(conn_reader).unwrap();
+    println!("Age: {}", object.age);
 }

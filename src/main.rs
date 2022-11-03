@@ -2,6 +2,7 @@ use std::env;
 
 mod client;
 mod server;
+mod object;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

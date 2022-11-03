@@ -1,23 +1,25 @@
 use std::io::*;
 use std::net::*;
 
+use crate::object::Person;
+
 pub fn main() {
     println!("Running as client");
 
-    // Steam needs to be used by the buffered reader and by us so we need two references
-    let mut stream = TcpStream::connect("localhost:10104").unwrap();
+    // Stream needs to be used by the buffered reader and by us so we need two references
+    let stream = TcpStream::connect("localhost:10104").unwrap();
 
     // In stream will be owned by the buffered reader
     let in_stream = stream.try_clone().unwrap();
+    let in_reader = BufReader::new(  in_stream);
 
     // Out stream will be owned by this method
-    let out_stream = &mut stream;
+    let mut out_stream = stream;
 
-    let conn_reader = BufReader::new(  in_stream);
+    // Create random object and serialize it
+    let person = Person{name: "John".to_owned(), age: 16, phones: ["Phone1".to_owned(), "Phone2".to_owned()].to_vec()};
+    serde_json::to_writer(&mut out_stream, &person).unwrap();
 
-    out_stream.write_all("Request bytes\n\n".as_bytes()).unwrap();
+    // Send object to server
     out_stream.flush().unwrap();
-    for line in conn_reader.lines() {
-        println!("{}", line.unwrap());
-    }
 }
